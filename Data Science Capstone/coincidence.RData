@@ -1,0 +1,40 @@
+coincidence<-function(txt, ngr){
+  #limpieza
+  txt<-gsub(",", "", txt)
+  txt<-gsub("[.]", "", txt)
+  txt<-gsub(";", "", txt)
+  txt<-gsub(":", "", txt)
+  #separación de palabras
+  x<-strsplit(txt, " ")
+  
+  #Last ngr words
+  pos<-(length(x[[1]])-ngr+1):length(x[[1]])
+  
+  words<-paste(c(x[[1]][pos]), collapse = ' ')
+  
+  #coincidences in ngr-gram
+  load("./ngrs.RData")
+  
+  ngrinit<-ngrs[[ngr]]%>%
+           filter(word==paste(c(x[[1]][pos]),
+                              collapse = ' '))
+  if(dim(ngrinit)[1]>0){
+    
+    #matching ngr+1-gram
+    ngrfinal<-ngrs[[ngr+1]]
+    ngrfinal<-filter(ngrfinal,
+                     grepl(paste("^",
+                                 ngrinit$word,
+                                 sep=""),
+                           ngrfinal$word)==TRUE)
+      
+    #suggested word
+    d<-dim(unnest_tokens(ngrfinal, final, word))[1]
+    if(d>0){
+        secu<-seq(ngr+1, d, by=ngr+1)
+        full<-unnest_tokens(ngrfinal, sug, word)[secu, 2]%>%
+              count(sug, sort=TRUE)
+    full[, 1]
+    }else paste("No coincidences")
+    } else paste("No coincidences")
+}
