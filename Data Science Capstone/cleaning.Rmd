@@ -1,0 +1,43 @@
+#Reading the data
+blogs1<-sample(readLines("./final/en_US/en_US.blogs.txt"))
+news1<-sample(reHadLines("./final/en_US/en_US.news.txt"))
+twitter1<-sample(readLines("./final/en_US/en_US.twitter.txt"))
+
+set.seed(2202017)
+twitter<-sample(twitter1, 10000)
+blogs<-sample(blogs1, 10000)
+news<-sample(news1, 10000)
+
+library(dplyr)
+library(tidytext)
+library(tidyr)
+library(stringr)
+
+#Creating the data frame
+data<-tbl_df(data.frame(line=c(1:length(c(twitter, news, blogs))), word=c(twitter, news, blogs)))
+
+#Each line as a character variable.
+data<-data%>%
+  mutate(word=as.character(word))
+
+#One word per row.
+data<-data%>%
+  unnest_tokens(word, word)
+
+#Eliminating numbers
+data<-data%>%
+  filter(grepl("[0-9]", data$word)==FALSE)
+
+#Removing weird and repeated characters
+data<-data%>%
+    filter(grepl("[a-zA-Z]", data$word)==TRUE, #weird characters
+           grepl(":", data$word)==FALSE, #removing ":"
+           grepl("'", data$word)==FALSE, #removing "'"
+           grepl("[.]", data$word)==FALSE, #removing "."
+           grepl("\\b(\\S+?)\\1\\S*\\b", data$word)==FALSE) #removing repeated characters
+
+#Removing web pages
+data<-data%>%
+    filter(grepl("http", data$word)==FALSE, 
+           grepl("https", data$word)==FALSE,
+           grepl("www", data$word)==FALSE)
