@@ -1,0 +1,10 @@
+ngrams<-function(data, to){
+  ngrs<-list()
+  for(i in 1:to){
+    ngrs[[i]]<-data%>%
+      unnest_tokens(word, word, token = "ngrams", n = i)%>%
+      count(word, sort=TRUE)%>%
+      filter(percent_rank(n)>.80)
+  }
+  save(ngrs, file="ngrs.RData")
+}
